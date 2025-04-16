@@ -21,6 +21,15 @@
         <FollowingTasks :following-tasks="followingTasksComputed" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @unfollow-task="unfollowTask" />
       </div>
     </div>
+    
+    <!-- Recommendations Modal -->
+    <div v-if="showRecommendationsModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>DeepSeek AI Recommendations</h2>
+        <pre>{{ recommendations }}</pre>
+        <button @click="showRecommendationsModal = false" class="close-btn">Close</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -41,78 +50,19 @@ export default {
     FollowingTasks,
     NewTaskForm
   },
-  setup() {
-    const currentTab = ref('active')
-    const tasks = ref([])
-    const showNewTaskForm = ref(false)
-
-    onMounted(() => {
-      // Load default tasks on component mount
-      tasks.value = [...defaultTasks]
-    })
-
-    const activeTasks = computed(() => tasks.value.filter(task => !task.completed && !task.following))
-    const completedTasks = computed(() => tasks.value.filter(task => task.completed))
-    const followingTasksComputed = computed(() => tasks.value.filter(task => task.following))
-
-    const addTask = (task) => {
-      task.id = tasks.value.length ? Math.max(...tasks.value.map(t => t.id)) + 1 : 1
-      tasks.value.push(task)
-      showNewTaskForm.value = false
+  data() {
+    return {
+      currentTab: 'active',
+      tasks: [],
+      showNewTaskForm: false,
+      showRecommendationsModal: false,
+      recommendations: ''
     }
-
-    const editTask = (taskId, updates) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value[index] = { ...tasks.value[index], ...updates }
-      }
-    }
-
-    const deleteTask = (taskId) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value.splice(index, 1)
-      }
-    }
-
-    const shareTask = (taskId) => {
-      const task = tasks.value.find(task => task.id === taskId)
-      if (task) {
-        alert(`Shared task: ${task.name}`)
-      }
-    }
-
-    const completeTask = (taskId) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value[index].completed = true
-      }
-    }
-
-    const uncompleteTask = (taskId) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value[index].completed = false
-      }
-    }
-
-    const followTask = (taskId) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value[index].following = true
-      }
-    }
-
-    const unfollowTask = (taskId) => {
-      const index = tasks.value.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        tasks.value[index].following = false
-      }
-    }
-
-    const summarizeTasks = () => {
+  },
+  methods: {
+    summarizeTasks() {
       // Prepare task data for API call
-      const taskData = tasks.value.map(task => ({
+      const taskData = this.tasks.map(task => ({
         name: task.name,
         dueDate: task.dueDate,
         important: task.important,
@@ -131,8 +81,9 @@ export default {
       console.log('Sending to DeepSeek API:', prompt);
       
       // Simulated response from API
-      const simulatedResponse = generateSimulatedRecommendations(taskData);
-      alert(`Task Completion Recommendations:\n${simulatedResponse}`);
+      const simulatedResponse = this.generateSimulatedRecommendations(taskData);
+      this.recommendations = simulatedResponse;
+      this.showRecommendationsModal = true;
       
       // Uncomment and configure this for actual API integration:
       /*
@@ -146,16 +97,16 @@ export default {
       })
       .then(response => response.json())
       .then(data => {
-        alert(`Task Completion Recommendations:\n${data.recommendations}`);
+        this.recommendations = data.recommendations;
+        this.showRecommendationsModal = true;
       })
       .catch(error => {
         console.error('Error fetching recommendations:', error);
         alert('Failed to fetch recommendations. Please try again later.');
       });
       */
-    }
-
-    const generateSimulatedRecommendations = (tasks) => {
+    },
+    generateSimulatedRecommendations(tasks) {
       // Simple logic for demonstration purposes
       const sortedTasks = [...tasks].sort((a, b) => {
         if (a.urgent && !b.urgent) return -1;
@@ -166,25 +117,75 @@ export default {
         return b.helpsWin - a.helpsWin;
       });
       return sortedTasks.map((task, index) => `${index + 1}. ${task.name}`).join('\n');
+    },
+    addTask(task) {
+      task.id = this.tasks.length ? Math.max(...this.tasks.map(t => t.id)) + 1 : 1;
+      this.tasks.push(task);
+      this.showNewTaskForm = false;
+    },
+    editTask(taskId, updates) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks[index] = { ...this.tasks[index], ...updates };
+      }
+    },
+    deleteTask(taskId) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks.splice(index, 1);
+      }
+    },
+    shareTask(taskId) {
+      const task = this.tasks.find(task => task.id === taskId);
+      if (task) {
+        alert(`Shared task: ${task.name}`);
+      }
+    },
+    completeTask(taskId) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks[index].completed = true;
+      }
+    },
+    uncompleteTask(taskId) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks[index].completed = false;
+      }
+    },
+    followTask(taskId) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks[index].following = true;
+      }
+    },
+    unfollowTask(taskId) {
+      const index = this.tasks.findIndex(task => task.id === taskId);
+      if (index !== -1) {
+        this.tasks[index].following = false;
+      }
     }
+  },
+  setup() {
+    const tasks = ref([]);
+    const showNewTaskForm = ref(false);
+
+    onMounted(() => {
+      // Load default tasks on component mount
+      tasks.value = [...defaultTasks];
+    });
+
+    const activeTasks = computed(() => tasks.value.filter(task => !task.completed && !task.following));
+    const completedTasks = computed(() => tasks.value.filter(task => task.completed));
+    const followingTasksComputed = computed(() => tasks.value.filter(task => task.following));
 
     return {
-      currentTab,
       tasks,
       activeTasks,
       completedTasks,
       followingTasksComputed,
-      showNewTaskForm,
-      addTask,
-      editTask,
-      deleteTask,
-      shareTask,
-      completeTask,
-      uncompleteTask,
-      followTask,
-      unfollowTask,
-      summarizeTasks
-    }
+      showNewTaskForm
+    };
   }
 }
 </script>
@@ -250,5 +251,58 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 600px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.modal-content pre {
+  white-space: pre-wrap;
+  text-align: left;
+  font-family: monospace;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 3px;
+  overflow: auto;
+  max-height: 400px;
+}
+
+.close-btn {
+  padding: 10px 15px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+  background-color: #5a6268;
 }
 </style>
