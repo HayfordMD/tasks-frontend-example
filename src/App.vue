@@ -11,6 +11,8 @@
     <FollowingTasks v-if="currentTab === 'following'" :following-tasks="followingTasksComputed" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @unfollow-task="unfollowTask" />
     <button @click="showNewTaskForm = true" class="new-task-btn">Create New Task</button>
     <NewTaskForm v-if="showNewTaskForm" @add-task="addTask" @cancel="showNewTaskForm = false" />
+    <button @click="summarizeTasks" class="new-task-btn">Summarize Tasks</button>
+    <button @click="showPayload" class="new-task-btn">Show Payload</button>
   </div>
 </template>
 
@@ -19,6 +21,7 @@ import TaskList from './components/TaskList.vue'
 import CompletedTasks from './components/CompletedTasks.vue'
 import FollowingTasks from './components/FollowingTasks.vue'
 import NewTaskForm from './components/NewTaskForm.vue'
+import config from './config';
 
 export default {
   name: 'App',
@@ -47,15 +50,36 @@ export default {
   },
   methods: {
     addTask(newTask) {
-      newTask.completed = false
-      newTask.following = false
-      this.tasks.push(newTask)
+      const task = {
+        id: Date.now(),
+        name: newTask.name,
+        description: newTask.description,
+        public: newTask.public,
+        dueDate: newTask.dueDate,
+        completed: false,
+        following: false,
+        important: false,
+        urgent: false,
+        rating: 0,
+        helpsWin: 0
+      }
+      this.tasks.push(task)
       this.showNewTaskForm = false
     },
     editTask(taskId, updatedData) {
-      const index = this.tasks.findIndex(task => task.id === taskId)
+      let index = this.tasks.findIndex(task => task.id === taskId)
       if (index !== -1) {
         this.tasks[index] = { ...this.tasks[index], ...updatedData }
+        return
+      }
+      index = this.completedTasks.findIndex(task => task.id === taskId)
+      if (index !== -1) {
+        this.completedTasks[index] = { ...this.completedTasks[index], ...updatedData }
+        return
+      }
+      index = this.followingTasks.findIndex(task => task.id === taskId)
+      if (index !== -1) {
+        this.followingTasks[index] = { ...this.followingTasks[index], ...updatedData }
       }
     },
     deleteTask(taskId) {
@@ -67,18 +91,29 @@ export default {
       alert(`Use our current share selector for coach, player, position group, etc...`)
     },
     completeTask(taskId) {
-      const index = this.tasks.findIndex(task => task.id === taskId)
+      let index = this.tasks.findIndex(task => task.id === taskId)
       if (index !== -1) {
         this.tasks[index].completed = true
         this.completedTasks.push(this.tasks[index])
         this.tasks.splice(index, 1)
+        return
+      }
+      index = this.followingTasks.findIndex(task => task.id === taskId)
+      if (index !== -1) {
+        this.followingTasks[index].completed = true
+        this.completedTasks.push(this.followingTasks[index])
+        this.followingTasks.splice(index, 1)
       }
     },
     uncompleteTask(taskId) {
       const index = this.completedTasks.findIndex(task => task.id === taskId)
       if (index !== -1) {
         this.completedTasks[index].completed = false
-        this.tasks.push(this.completedTasks[index])
+        if (this.completedTasks[index].following) {
+          this.followingTasks.push(this.completedTasks[index])
+        } else {
+          this.tasks.push(this.completedTasks[index])
+        }
         this.completedTasks.splice(index, 1)
       }
     },
@@ -94,9 +129,84 @@ export default {
       const index = this.followingTasks.findIndex(task => task.id === taskId)
       if (index !== -1) {
         this.followingTasks[index].following = false
-        this.tasks.push(this.followingTasks[index])
+        if (this.followingTasks[index].completed) {
+          this.completedTasks.push(this.followingTasks[index])
+        } else {
+          this.tasks.push(this.followingTasks[index])
+        }
         this.followingTasks.splice(index, 1)
       }
+    },
+    summarizeTasks() {
+      // Prepare task data for API call
+      const taskData = this.tasks.map(task => ({
+        name: task.name,
+        dueDate: task.dueDate,
+        important: task.important,
+        urgent: task.urgent,
+        rating: task.rating,
+        helpsWin: task.helpsWin
+      }));
+      
+      // Use API key from config
+      const apiKey = config.deepSeekApiKey;
+      const endpoint = 'https://api.deepseek.com/v1/recommendations';
+      
+      // Mock API call - in a real scenario, you would use fetch or axios
+      // For demonstration, we'll simulate the response
+      const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes.`;
+      console.log('Sending to DeepSeek API:', prompt);
+      
+      // Simulated response from API
+      const simulatedResponse = this.generateSimulatedRecommendations(taskData);
+      alert(`Task Completion Recommendations:\n${simulatedResponse}`);
+      
+      // Uncomment and configure this for actual API integration:
+      /*
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(`Task Completion Recommendations:\n${data.recommendations}`);
+      })
+      .catch(error => {
+        console.error('Error fetching recommendations:', error);
+        alert('Failed to fetch recommendations. Please try again later.');
+      });
+      */
+    },
+    generateSimulatedRecommendations(tasks) {
+      // Simple logic for demonstration purposes
+      const sortedTasks = [...tasks].sort((a, b) => {
+        if (a.urgent && !b.urgent) return -1;
+        if (!a.urgent && b.urgent) return 1;
+        if (a.important && !b.important) return -1;
+        if (!a.important && b.important) return 1;
+        if (a.rating !== b.rating) return b.rating - a.rating;
+        return b.helpsWin - a.helpsWin;
+      });
+      return sortedTasks.map((task, index) => `${index + 1}. ${task.name}`).join('\n');
+    },
+    showPayload() {
+      // Prepare task data for API call
+      const taskData = this.tasks.map(task => ({
+        name: task.name,
+        dueDate: task.dueDate,
+        important: task.important,
+        urgent: task.urgent,
+        rating: task.rating,
+        helpsWin: task.helpsWin
+      }));
+      
+      // Format the payload as it would be sent to DeepSeek API
+      const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes.`;
+      alert(`DeepSeek API Payload:\n\n${prompt}`);
     }
   }
 }

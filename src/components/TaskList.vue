@@ -11,6 +11,38 @@
         </div>
         <p>{{ task.description }}</p>
         <p><span class="clock-icon">🕒</span> {{ task.dueDate }}</p>
+        <div class="task-toggles">
+          <button 
+            :class="{ 'toggle-btn': true, 'active': task.important }" 
+            @click="$emit('editTask', task.id, { important: !task.important })"
+          >
+            Important
+          </button>
+          <button 
+            :class="{ 'toggle-btn': true, 'active': task.urgent }" 
+            @click="$emit('editTask', task.id, { urgent: !task.urgent })"
+          >
+            Urgent
+          </button>
+          <span class="rating-container">
+            <span class="rating-label">Rating:</span>
+            <span 
+              v-for="star in 5" 
+              :key="star" 
+              class="star" 
+              :class="{ 'filled': star <= task.rating }"
+              @click="$emit('editTask', task.id, { rating: star })"
+            >
+              ★
+            </span>
+          </span>
+          <span class="voting-container">
+            <span class="voting-label">Helps Win:</span>
+            <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin + 1 })" class="vote-btn up">▲</button>
+            <span class="vote-count">{{ task.helpsWin }}</span>
+            <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin - 1 })" class="vote-btn down">▼</button>
+          </span>
+        </div>
         <div class="task-actions">
           <button @click="$emit('shareTask', task.id)" class="share-btn">Share</button>
           <button @click="$emit('deleteTask', task.id)" class="delete-btn">Delete</button>
@@ -19,7 +51,16 @@
         </div>
       </li>
     </ul>
-    <p v-else>No tasks available.</p>
+    <div v-else class="no-tasks">
+      <p>No tasks available.</p>
+      <div class="task-list-actions">
+        <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
+      </div>
+    </div>
+    <div v-if="sortedTasks.length > 0" class="task-list-actions">
+      <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
+      <button @click="$emit('showPayload')" class="payload-btn">Show DeepSeek Payload</button>
+    </div>
   </div>
 </template>
 
@@ -46,7 +87,7 @@ export default {
       });
     }
   },
-  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask']
+  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask', 'summarizeTasks', 'showPayload']
 }
 </script>
 
@@ -113,6 +154,83 @@ ul {
   margin-top: 10px;
 }
 
+.task-toggles {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.toggle-btn.active {
+  background-color: #ff9800;
+  color: white;
+  border-color: #ff9800;
+}
+
+.toggle-btn:hover:not(.active) {
+  background-color: #e0e0e0;
+}
+
+.rating-container, .voting-container {
+  display: flex;
+  align-items: center;
+}
+
+.rating-label, .voting-label {
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.star {
+  color: #ccc;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ffd700;
+}
+
+.star:hover {
+  color: #ffd700;
+}
+
+.vote-btn {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.vote-btn.up:hover {
+  color: #28a745;
+}
+
+.vote-btn.down:hover {
+  color: #dc3545;
+}
+
+.vote-count {
+  font-size: 14px;
+  min-width: 20px;
+  text-align: center;
+}
+
 .share-btn, .delete-btn, .complete-btn, .follow-btn {
   padding: 5px 10px;
   border: none;
@@ -147,5 +265,47 @@ ul {
 
 .follow-btn:hover {
   background-color: #0056b3;
+}
+
+.task-list-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.summarize-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 3px;
+  background-color: #9c27b0;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.summarize-btn:hover {
+  background-color: #7b1fa2;
+}
+
+.payload-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 3px;
+  background-color: #2196f3;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+  transition: background-color 0.3s;
+}
+
+.payload-btn:hover {
+  background-color: #1976d2;
+}
+
+.no-tasks {
+  text-align: center;
+  margin-top: 20px;
 }
 </style>
