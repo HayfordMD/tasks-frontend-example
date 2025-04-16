@@ -64,7 +64,7 @@ export default {
       this.followingTasks = this.followingTasks.filter(task => task.id !== taskId)
     },
     shareTask(taskId) {
-      alert(`Sharing task with ID: ${taskId}`)
+      alert(`Use our current share selector for coach, player, position group, etc...`)
     },
     completeTask(taskId) {
       const index = this.tasks.findIndex(task => task.id === taskId)
