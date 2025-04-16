@@ -1,3 +1,6 @@
+
+NPM RUN DEV
+
 # Task Management Frontend
 
 This project is a frontend application built with Vue.js and vanilla HTML/JavaScript. The primary goal is to create a simple component on a page that allows users to manage a list of tasks.
