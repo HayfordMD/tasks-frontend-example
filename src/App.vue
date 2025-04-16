@@ -9,6 +9,10 @@
       <button @click="summarizeTasks" class="summarize-btn">Summarize Tasks</button>
     </div>
     <button @click="showNewTaskForm = true" class="new-task-btn">Create New Task</button>
+    <div class="api-key-container">
+      <input v-model="customApiKey" type="password" placeholder="Enter DeepSeek API Key" class="api-key-input" />
+      <button @click="saveApiKey" class="save-api-key-btn">Save API Key</button>
+    </div>
     <NewTaskForm v-if="showNewTaskForm" @add-task="addTask" @cancel="showNewTaskForm = false" />
     <div class="tab-content">
       <div v-if="currentTab === 'active'" class="tasks-container">
@@ -56,7 +60,8 @@ export default {
       tasks: [],
       showNewTaskForm: false,
       showRecommendationsModal: false,
-      recommendations: ''
+      recommendations: '',
+      customApiKey: localStorage.getItem('deepSeekApiKey') || ''
     }
   },
   methods: {
@@ -73,8 +78,8 @@ export default {
           helpsWin: task.helpsWin
         }));
       
-      // Use API key from config
-      const apiKey = config.deepSeekApiKey;
+      // Use API key from input if provided, otherwise fall back to config
+      const apiKey = this.customApiKey || config.deepSeekApiKey;
       const endpoint = 'https://api.deepseek.com/v1/recommendations';
       
       // Mock API call - in a real scenario, you would use fetch or axios
@@ -131,6 +136,7 @@ export default {
     },
     addTask(task) {
       task.id = this.tasks.length ? Math.max(...this.tasks.map(t => t.id)) + 1 : 1;
+      task.helpsWin = 0; // Initialize helpsWin to 0 for new tasks
       this.tasks.push(task);
       this.showNewTaskForm = false;
     },
