@@ -1,18 +1,26 @@
 <template>
   <div class="app-container">
-    <h3>This will be it's own tasks feed on the dashboard page put it next to coaches/players component</h3>
-    <div class="tab-navigation">
-      <button @click="currentTab = 'active'" :class="{ active: currentTab === 'active' }">Active Tasks</button>
-      <button @click="currentTab = 'completed'" :class="{ active: currentTab === 'completed' }">Completed Tasks</button>
-      <button @click="currentTab = 'following'" :class="{ active: currentTab === 'following' }">Following</button>
+    <div class="tabs-container">
+      <div class="tabs">
+        <button @click="currentTab = 'active'" :class="{ active: currentTab === 'active' }">Active Tasks</button>
+        <button @click="currentTab = 'completed'" :class="{ active: currentTab === 'completed' }">Completed Tasks</button>
+        <button @click="currentTab = 'following'" :class="{ active: currentTab === 'following' }">Following Tasks</button>
+      </div>
+      <button @click="summarizeTasks" class="summarize-btn">Summarize Tasks</button>
     </div>
-    <TaskList v-if="currentTab === 'active'" :tasks="activeTasks" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @complete-task="completeTask" @follow-task="followTask" />
-    <CompletedTasks v-if="currentTab === 'completed'" :completed-tasks="completedTasks" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @uncomplete-task="uncompleteTask" />
-    <FollowingTasks v-if="currentTab === 'following'" :following-tasks="followingTasksComputed" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @unfollow-task="unfollowTask" />
     <button @click="showNewTaskForm = true" class="new-task-btn">Create New Task</button>
     <NewTaskForm v-if="showNewTaskForm" @add-task="addTask" @cancel="showNewTaskForm = false" />
-    <button @click="summarizeTasks" class="new-task-btn">Summarize Tasks</button>
-    <button @click="showPayload" class="new-task-btn">Show Payload</button>
+    <div class="tab-content">
+      <div v-if="currentTab === 'active'" class="tasks-container">
+        <TaskList :tasks="activeTasks" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @complete-task="completeTask" @follow-task="followTask" />
+      </div>
+      <div v-else-if="currentTab === 'completed'" class="tasks-container">
+        <CompletedTasks :completed-tasks="completedTasks" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @uncomplete-task="uncompleteTask" />
+      </div>
+      <div v-else-if="currentTab === 'following'" class="tasks-container">
+        <FollowingTasks :following-tasks="followingTasksComputed" @edit-task="editTask" @delete-task="deleteTask" @share-task="shareTask" @unfollow-task="unfollowTask" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -160,22 +168,6 @@ export default {
       return sortedTasks.map((task, index) => `${index + 1}. ${task.name}`).join('\n');
     }
 
-    const showPayload = () => {
-      // Prepare task data for API call
-      const taskData = tasks.value.map(task => ({
-        name: task.name,
-        dueDate: task.dueDate,
-        important: task.important,
-        urgent: task.urgent,
-        rating: task.rating,
-        helpsWin: task.helpsWin
-      }));
-      
-      // Format the payload as it would be sent to DeepSeek API
-      const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes.`;
-      alert(`DeepSeek API Payload:\n\n${prompt}`);
-    }
-
     return {
       currentTab,
       tasks,
@@ -191,8 +183,7 @@ export default {
       uncompleteTask,
       followTask,
       unfollowTask,
-      summarizeTasks,
-      showPayload
+      summarizeTasks
     }
   }
 }
@@ -205,48 +196,59 @@ export default {
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.tab-navigation {
+.tabs-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.tab-navigation button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #e9ecef;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px 5px 0 0;
+.tabs {
+  display: flex;
+  gap: 10px;
 }
 
-.tab-navigation button.active {
+.tabs button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #eee;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.tabs button.active {
   background-color: #007bff;
   color: white;
 }
 
-.tab-navigation button:hover:not(.active) {
-  background-color: #dee2e6;
+.tabs button:hover:not(.active) {
+  background-color: #ddd;
 }
 
-.new-task-btn {
-  display: block;
-  margin: 20px auto;
-  padding: 10px 20px;
+.new-task-btn, .summarize-btn {
+  padding: 10px 15px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  transition: background-color 0.3s;
 }
 
-.new-task-btn:hover {
+.new-task-btn:hover, .summarize-btn:hover {
   background-color: #0056b3;
+}
+
+.tab-content {
+  margin-top: 20px;
+}
+
+.tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 </style>

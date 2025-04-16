@@ -2,9 +2,6 @@
   <div class="task-list">
     <div class="header-with-buttons">
       <h2>Tasks</h2>
-      <div class="header-buttons">
-        <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
-      </div>
     </div>
     <ul v-if="sortedTasks.length > 0">
       <li v-for="task in sortedTasks" :key="task.id" class="task-item">
@@ -59,9 +56,6 @@
     <div v-else class="no-tasks">
       <p>No tasks available.</p>
     </div>
-    <div v-if="sortedTasks.length > 0" class="task-list-actions">
-      <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
-    </div>
   </div>
 </template>
 
@@ -88,7 +82,7 @@ export default {
       });
     }
   },
-  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask', 'summarizeTasks', 'showPayload']
+  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask', 'summarizeTasks']
 }
 </script>
 
