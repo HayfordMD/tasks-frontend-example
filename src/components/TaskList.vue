@@ -7,12 +7,14 @@
       <li v-for="task in sortedTasks" :key="task.id" class="task-item">
         <div class="task-header">
           <h3>{{ task.name }}</h3>
-          <span :class="{ 'public': task.public, 'private': !task.public }">
-            {{ task.public ? 'Public' : 'Private' }}
-          </span>
+          <div class="header-right">
+            <span :class="{ 'public': task.public, 'private': !task.public }" class="task-privacy">{{ task.public ? 'Public' : 'Private' }}</span>
+            <button @click="$emit('editTask', task.id, {})" class="edit-btn">Edit</button>
+          </div>
         </div>
         <p>{{ task.description }}</p>
         <p><span class="clock-icon">🕒</span> {{ task.dueDate }}</p>
+        <hr class="section-divider">
         <div class="task-details">
           <span class="task-toggles">
             <button @click="$emit('editTask', task.id, { urgent: !task.urgent })" :class="{ active: task.urgent }" class="toggle-btn urgent-btn">Urgent</button>
@@ -29,6 +31,7 @@
             <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin > 0 ? task.helpsWin - 1 : 0 })" class="vote-btn down">▼</button>
           </span>
         </div>
+        <hr class="section-divider">
         <div class="task-actions">
           <button @click="$emit('shareTask', task.id)" class="share-btn">Share</button>
           <button @click="$emit('deleteTask', task.id)" class="delete-btn">Delete</button>
@@ -40,7 +43,6 @@
     <div v-else class="no-tasks">
       <p>No tasks available.</p>
     </div>
-    <button @click="$emit('createTask')" class="create-task-btn">Create Task</button>
   </div>
 </template>
 
@@ -125,16 +127,15 @@ ul {
   cursor: pointer;
 }
 
-.task-header span {
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.clock-icon {
-  font-size: 16px;
-  margin-right: 5px;
+.task-privacy {
+  font-size: 14px;
+  color: #6c757d;
 }
 
 .public {
@@ -147,11 +148,35 @@ ul {
   color: white;
 }
 
+.clock-icon {
+  font-size: 16px;
+  margin-right: 5px;
+}
+
+.edit-btn {
+  padding: 3px 8px;
+  background-color: #ffc107;
+  color: black;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.edit-btn:hover {
+  background-color: #ff9800;
+}
+
 .task-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  padding: 10px 0;
+  background-color: #f8f9fa;
+  border-radius: 5px;
 }
 
 .task-actions {
@@ -321,5 +346,11 @@ ul {
   background-color: #ffc107;
   color: black;
   border-color: #ffc107;
+}
+
+.section-divider {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid #e0e0e0;
 }
 </style>

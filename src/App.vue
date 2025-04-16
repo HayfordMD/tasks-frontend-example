@@ -61,15 +61,17 @@ export default {
   },
   methods: {
     summarizeTasks() {
-      // Prepare task data for API call
-      const taskData = this.tasks.map(task => ({
-        name: task.name,
-        dueDate: task.dueDate,
-        important: task.important,
-        urgent: task.urgent,
-        rating: task.rating,
-        helpsWin: task.helpsWin
-      }));
+      // Prepare task data for API call - only active tasks (not completed or following)
+      const taskData = this.tasks
+        .filter(task => !task.completed && !task.following)
+        .map(task => ({
+          name: task.name,
+          dueDate: task.dueDate,
+          important: task.important,
+          urgent: task.urgent,
+          rating: task.rating,
+          helpsWin: task.helpsWin
+        }));
       
       // Use API key from config
       const apiKey = config.deepSeekApiKey;
@@ -77,7 +79,7 @@ export default {
       
       // Mock API call - in a real scenario, you would use fetch or axios
       // For demonstration, we'll simulate the response
-      const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes.`;
+      const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes. Additionally, provide a priority rating out of 100 for each task, where 100 is the highest possible priority.`;
       console.log('Sending to DeepSeek API:', prompt);
       
       // Simulated response from API
@@ -116,7 +118,16 @@ export default {
         if (a.rating !== b.rating) return b.rating - a.rating;
         return b.helpsWin - a.helpsWin;
       });
-      return sortedTasks.map((task, index) => `${index + 1}. ${task.name}`).join('\n');
+      // Create a formatted table with a priority rating
+      let result = 'Order | Task Name            | Priority (1-100)\n';
+      result += '------|----------------------|------------------\n';
+      sortedTasks.forEach((task, index) => {
+        // Simulate a priority rating based on some logic (for demo purposes)
+        const priorityRating = Math.min(100, Math.max(1, Math.round((task.urgent ? 30 : 0) + (task.important ? 20 : 0) + task.rating * 10 + task.helpsWin * 5)));
+        const paddedName = task.name.padEnd(20).substring(0, 20);
+        result += `${index + 1}.    | ${paddedName} | ${priorityRating}\n`;
+      });
+      return result;
     },
     addTask(task) {
       task.id = this.tasks.length ? Math.max(...this.tasks.map(t => t.id)) + 1 : 1;
