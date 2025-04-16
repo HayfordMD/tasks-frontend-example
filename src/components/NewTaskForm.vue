@@ -1,9 +1,8 @@
 <template>
   <div class="new-task-form">
-    <h2>Create New Task</h2>
     <form @submit.prevent="submitForm">
       <div class="form-group">
-        <label for="name">Task Name (max 64 characters):</label>
+        <label for="name">Task Name:</label>
         <input type="text" id="name" v-model="newTask.name" maxlength="64" required>
       </div>
       <div class="form-group">
@@ -12,8 +11,11 @@
       </div>
       <div class="form-group checkbox-group">
         <label for="isPublic">Public</label>
-        <input type="checkbox" id="isPublic" v-model="newTask.isPublic">
+        <input type="checkbox" id="isPublic" v-model="newTask.public">
+        <!-- Share Button next to Public checkbox -->
+      <button type="button" @click="$emit('shareTask', newTask.id)" class="share-btn">Share</button>
       </div>
+
       <div class="form-group">
         <label for="dueDate">Due Date:</label>
         <select id="dueDate" v-model="newTask.dueDate">
@@ -41,7 +43,7 @@ export default {
         id: null,
         name: '',
         description: '',
-        isPublic: false,
+        public: false,
         dueDate: '1 week',
         showAdvanced: false
       }
@@ -58,7 +60,7 @@ export default {
         id: null,
         name: '',
         description: '',
-        isPublic: false,
+        public: false,
         dueDate: '1 week',
         showAdvanced: false
       }

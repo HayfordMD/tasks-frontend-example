@@ -1,8 +1,8 @@
 <template>
-  <div class="task-list">
-    <h2>Tasks</h2>
-    <ul v-if="sortedTasks.length > 0">
-      <li v-for="task in sortedTasks" :key="task.id" class="task-item">
+  <div class="following-tasks">
+    <h2>Following Tasks</h2>
+    <ul v-if="followingTasks.length > 0">
+      <li v-for="task in followingTasks" :key="task.id" class="task-item">
         <div class="task-header">
           <h3>{{ task.name }}</h3>
           <span :class="{ 'public': task.public, 'private': !task.public }">
@@ -14,44 +14,29 @@
         <div class="task-actions">
           <button @click="$emit('shareTask', task.id)" class="share-btn">Share</button>
           <button @click="$emit('deleteTask', task.id)" class="delete-btn">Delete</button>
-          <button @click="$emit('completeTask', task.id)" class="complete-btn">Complete</button>
-          <button @click="$emit('followTask', task.id)" class="follow-btn">Follow</button>
+          <button @click="$emit('unfollowTask', task.id)" class="unfollow-btn">Unfollow</button>
         </div>
       </li>
     </ul>
-    <p v-else>No tasks available.</p>
+    <p v-else>No tasks you are following.</p>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'TaskList',
+  name: 'FollowingTasks',
   props: {
-    tasks: {
+    followingTasks: {
       type: Array,
       required: true
     }
   },
-  computed: {
-    sortedTasks() {
-      return [...this.tasks].sort((a, b) => {
-        const dueDates = {
-          '4 hours': 0,
-          '1 day': 1,
-          '3 days': 2,
-          '1 week': 3,
-          'longer than 1 week': 4
-        };
-        return dueDates[a.dueDate] - dueDates[b.dueDate];
-      });
-    }
-  },
-  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask']
+  emits: ['editTask', 'deleteTask', 'shareTask', 'unfollowTask']
 }
 </script>
 
 <style scoped>
-.task-list {
+.following-tasks {
   margin-bottom: 20px;
 }
 
@@ -113,7 +98,7 @@ ul {
   margin-top: 10px;
 }
 
-.share-btn, .delete-btn, .complete-btn, .follow-btn {
+.share-btn, .delete-btn, .unfollow-btn {
   padding: 5px 10px;
   border: none;
   border-radius: 3px;
@@ -131,21 +116,12 @@ ul {
   color: white;
 }
 
-.complete-btn {
-  background-color: #28a745;
+.unfollow-btn {
+  background-color: #6c757d;
   color: white;
 }
 
-.complete-btn:hover {
-  background-color: #218838;
-}
-
-.follow-btn {
-  background-color: #007bff;
-  color: white;
-}
-
-.follow-btn:hover {
-  background-color: #0056b3;
+.unfollow-btn:hover {
+  background-color: #5a6268;
 }
 </style>
