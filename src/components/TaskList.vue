@@ -13,36 +13,20 @@
         </div>
         <p>{{ task.description }}</p>
         <p><span class="clock-icon">🕒</span> {{ task.dueDate }}</p>
-        <div class="task-toggles">
-          <button 
-            :class="{ 'toggle-btn': true, 'active': task.important }" 
-            @click="$emit('editTask', task.id, { important: !task.important })"
-          >
-            Important
-          </button>
-          <button 
-            :class="{ 'toggle-btn': true, 'active': task.urgent }" 
-            @click="$emit('editTask', task.id, { urgent: !task.urgent })"
-          >
-            Urgent
-          </button>
+        <div class="task-details">
+          <span class="task-toggles">
+            <button @click="$emit('editTask', task.id, { urgent: !task.urgent })" :class="{ active: task.urgent }" class="toggle-btn urgent-btn">Urgent</button>
+            <button @click="$emit('editTask', task.id, { important: !task.important })" :class="{ active: task.important }" class="toggle-btn important-btn">Important</button>
+          </span>
           <span class="rating-container">
             <span class="rating-label">Rating:</span>
-            <span 
-              v-for="star in 5" 
-              :key="star" 
-              class="star" 
-              :class="{ 'filled': star <= task.rating }"
-              @click="$emit('editTask', task.id, { rating: star })"
-            >
-              ★
-            </span>
+            <button v-for="star in 5" :key="star" @click="$emit('editTask', task.id, { rating: star })" class="star-btn" :class="{ 'filled': star <= task.rating }">★</button>
           </span>
           <span class="voting-container">
             <span class="voting-label">Helps Win:</span>
             <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin + 1 })" class="vote-btn up">▲</button>
             <span class="vote-count">{{ task.helpsWin }}</span>
-            <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin - 1 })" class="vote-btn down">▼</button>
+            <button @click="$emit('editTask', task.id, { helpsWin: task.helpsWin > 0 ? task.helpsWin - 1 : 0 })" class="vote-btn down">▼</button>
           </span>
         </div>
         <div class="task-actions">
@@ -56,6 +40,7 @@
     <div v-else class="no-tasks">
       <p>No tasks available.</p>
     </div>
+    <button @click="$emit('createTask')" class="create-task-btn">Create Task</button>
   </div>
 </template>
 
@@ -82,7 +67,7 @@ export default {
       });
     }
   },
-  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask', 'summarizeTasks']
+  emits: ['editTask', 'deleteTask', 'shareTask', 'completeTask', 'followTask', 'summarizeTasks', 'createTask']
 }
 </script>
 
@@ -119,6 +104,12 @@ ul {
   margin-bottom: 10px;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .task-header {
@@ -131,6 +122,7 @@ ul {
 .task-header h3 {
   margin: 0;
   font-size: 18px;
+  cursor: pointer;
 }
 
 .task-header span {
@@ -155,90 +147,20 @@ ul {
   color: white;
 }
 
+.task-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
 .task-actions {
   display: flex;
   gap: 10px;
   margin-top: 10px;
 }
 
-.task-toggles {
-  display: flex;
-  gap: 10px;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.toggle-btn {
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background-color: #f0f0f0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.toggle-btn.active {
-  background-color: #ff9800;
-  color: white;
-  border-color: #ff9800;
-}
-
-.toggle-btn:hover:not(.active) {
-  background-color: #e0e0e0;
-}
-
-.rating-container, .voting-container {
-  display: flex;
-  align-items: center;
-}
-
-.rating-label, .voting-label {
-  font-size: 14px;
-  margin-right: 5px;
-}
-
-.star {
-  color: #ccc;
-  cursor: pointer;
-  font-size: 16px;
-  transition: color 0.2s;
-}
-
-.star.filled {
-  color: #ffd700;
-}
-
-.star:hover {
-  color: #ffd700;
-}
-
-.vote-btn {
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0 5px;
-  line-height: 1;
-}
-
-.vote-btn.up:hover {
-  color: #28a745;
-}
-
-.vote-btn.down:hover {
-  color: #dc3545;
-}
-
-.vote-count {
-  font-size: 14px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.share-btn, .delete-btn, .complete-btn, .follow-btn {
+.share-btn, .delete-btn, .complete-btn, .follow-btn, .edit-btn, .create-task-btn {
   padding: 5px 10px;
   border: none;
   border-radius: 3px;
@@ -261,42 +183,137 @@ ul {
   color: white;
 }
 
-.complete-btn:hover {
-  background-color: #218838;
+.follow-btn {
+  background-color: #ffc107;
+  color: black;
 }
 
-.follow-btn {
+.edit-btn {
   background-color: #007bff;
   color: white;
 }
 
+.create-task-btn {
+  background-color: #007bff;
+  color: white;
+  margin-top: 10px;
+}
+
+.share-btn:hover {
+  background-color: #138496;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.complete-btn:hover {
+  background-color: #218838;
+}
+
 .follow-btn:hover {
+  background-color: #e0a800;
+}
+
+.edit-btn:hover {
   background-color: #0056b3;
 }
 
-.task-list-actions {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.summarize-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 3px;
-  background-color: #9c27b0;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.summarize-btn:hover {
-  background-color: #7b1fa2;
+.create-task-btn:hover {
+  background-color: #0056b3;
 }
 
 .no-tasks {
   text-align: center;
-  margin-top: 20px;
+  color: #6c757d;
+}
+
+.rating-container, .voting-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rating-label, .voting-label {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 20px;
+  cursor: pointer;
+  color: #d4af37;
+}
+
+.star-btn.filled {
+  color: #ffd700;
+}
+
+.vote-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6c757d;
+  line-height: 1;
+}
+
+.vote-btn.up:hover {
+  color: #28a745;
+}
+
+.vote-btn.down:hover {
+  color: #dc3545;
+}
+
+.vote-count {
+  font-size: 16px;
+  color: #6c757d;
+  min-width: 20px;
+  text-align: center;
+}
+
+.task-toggles {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.toggle-btn.active {
+  background-color: #ff9800;
+  color: white;
+  border-color: #ff9800;
+}
+
+.toggle-btn:hover:not(.active) {
+  background-color: #e0e0e0;
+}
+
+.urgent-btn.active {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.important-btn.active {
+  background-color: #ffc107;
+  color: black;
+  border-color: #ffc107;
 }
 </style>
