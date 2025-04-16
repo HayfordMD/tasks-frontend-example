@@ -17,11 +17,13 @@
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue'
 import TaskList from './components/TaskList.vue'
 import CompletedTasks from './components/CompletedTasks.vue'
 import FollowingTasks from './components/FollowingTasks.vue'
 import NewTaskForm from './components/NewTaskForm.vue'
-import config from './config';
+import defaultTasks from './defaultTasks.js'
+import config from './config.js'
 
 export default {
   name: 'App',
@@ -31,115 +33,78 @@ export default {
     FollowingTasks,
     NewTaskForm
   },
-  data() {
-    return {
-      tasks: [],
-      completedTasks: [],
-      followingTasks: [],
-      showNewTaskForm: false,
-      currentTab: 'active'
+  setup() {
+    const currentTab = ref('active')
+    const tasks = ref([])
+    const showNewTaskForm = ref(false)
+
+    onMounted(() => {
+      // Load default tasks on component mount
+      tasks.value = [...defaultTasks]
+    })
+
+    const activeTasks = computed(() => tasks.value.filter(task => !task.completed && !task.following))
+    const completedTasks = computed(() => tasks.value.filter(task => task.completed))
+    const followingTasksComputed = computed(() => tasks.value.filter(task => task.following))
+
+    const addTask = (task) => {
+      task.id = tasks.value.length ? Math.max(...tasks.value.map(t => t.id)) + 1 : 1
+      tasks.value.push(task)
+      showNewTaskForm.value = false
     }
-  },
-  computed: {
-    activeTasks() {
-      return this.tasks.filter(task => !task.completed && !task.following)
-    },
-    followingTasksComputed() {
-      return this.tasks.filter(task => task.following)
+
+    const editTask = (taskId, updates) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = { ...tasks.value[index], ...updates }
+      }
     }
-  },
-  methods: {
-    addTask(newTask) {
-      const task = {
-        id: Date.now(),
-        name: newTask.name,
-        description: newTask.description,
-        public: newTask.public,
-        dueDate: newTask.dueDate,
-        completed: false,
-        following: false,
-        important: false,
-        urgent: false,
-        rating: 0,
-        helpsWin: 0
-      }
-      this.tasks.push(task)
-      this.showNewTaskForm = false
-    },
-    editTask(taskId, updatedData) {
-      let index = this.tasks.findIndex(task => task.id === taskId)
+
+    const deleteTask = (taskId) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
       if (index !== -1) {
-        this.tasks[index] = { ...this.tasks[index], ...updatedData }
-        return
+        tasks.value.splice(index, 1)
       }
-      index = this.completedTasks.findIndex(task => task.id === taskId)
+    }
+
+    const shareTask = (taskId) => {
+      const task = tasks.value.find(task => task.id === taskId)
+      if (task) {
+        alert(`Shared task: ${task.name}`)
+      }
+    }
+
+    const completeTask = (taskId) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
       if (index !== -1) {
-        this.completedTasks[index] = { ...this.completedTasks[index], ...updatedData }
-        return
+        tasks.value[index].completed = true
       }
-      index = this.followingTasks.findIndex(task => task.id === taskId)
+    }
+
+    const uncompleteTask = (taskId) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
       if (index !== -1) {
-        this.followingTasks[index] = { ...this.followingTasks[index], ...updatedData }
+        tasks.value[index].completed = false
       }
-    },
-    deleteTask(taskId) {
-      this.tasks = this.tasks.filter(task => task.id !== taskId)
-      this.completedTasks = this.completedTasks.filter(task => task.id !== taskId)
-      this.followingTasks = this.followingTasks.filter(task => task.id !== taskId)
-    },
-    shareTask(taskId) {
-      alert(`Use our current share selector for coach, player, position group, etc...`)
-    },
-    completeTask(taskId) {
-      let index = this.tasks.findIndex(task => task.id === taskId)
+    }
+
+    const followTask = (taskId) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
       if (index !== -1) {
-        this.tasks[index].completed = true
-        this.completedTasks.push(this.tasks[index])
-        this.tasks.splice(index, 1)
-        return
+        tasks.value[index].following = true
       }
-      index = this.followingTasks.findIndex(task => task.id === taskId)
+    }
+
+    const unfollowTask = (taskId) => {
+      const index = tasks.value.findIndex(task => task.id === taskId)
       if (index !== -1) {
-        this.followingTasks[index].completed = true
-        this.completedTasks.push(this.followingTasks[index])
-        this.followingTasks.splice(index, 1)
+        tasks.value[index].following = false
       }
-    },
-    uncompleteTask(taskId) {
-      const index = this.completedTasks.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        this.completedTasks[index].completed = false
-        if (this.completedTasks[index].following) {
-          this.followingTasks.push(this.completedTasks[index])
-        } else {
-          this.tasks.push(this.completedTasks[index])
-        }
-        this.completedTasks.splice(index, 1)
-      }
-    },
-    followTask(taskId) {
-      const index = this.tasks.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        this.tasks[index].following = true
-        this.followingTasks.push(this.tasks[index])
-        this.tasks.splice(index, 1)
-      }
-    },
-    unfollowTask(taskId) {
-      const index = this.followingTasks.findIndex(task => task.id === taskId)
-      if (index !== -1) {
-        this.followingTasks[index].following = false
-        if (this.followingTasks[index].completed) {
-          this.completedTasks.push(this.followingTasks[index])
-        } else {
-          this.tasks.push(this.followingTasks[index])
-        }
-        this.followingTasks.splice(index, 1)
-      }
-    },
-    summarizeTasks() {
+    }
+
+    const summarizeTasks = () => {
       // Prepare task data for API call
-      const taskData = this.tasks.map(task => ({
+      const taskData = tasks.value.map(task => ({
         name: task.name,
         dueDate: task.dueDate,
         important: task.important,
@@ -158,7 +123,7 @@ export default {
       console.log('Sending to DeepSeek API:', prompt);
       
       // Simulated response from API
-      const simulatedResponse = this.generateSimulatedRecommendations(taskData);
+      const simulatedResponse = generateSimulatedRecommendations(taskData);
       alert(`Task Completion Recommendations:\n${simulatedResponse}`);
       
       // Uncomment and configure this for actual API integration:
@@ -180,8 +145,9 @@ export default {
         alert('Failed to fetch recommendations. Please try again later.');
       });
       */
-    },
-    generateSimulatedRecommendations(tasks) {
+    }
+
+    const generateSimulatedRecommendations = (tasks) => {
       // Simple logic for demonstration purposes
       const sortedTasks = [...tasks].sort((a, b) => {
         if (a.urgent && !b.urgent) return -1;
@@ -192,10 +158,11 @@ export default {
         return b.helpsWin - a.helpsWin;
       });
       return sortedTasks.map((task, index) => `${index + 1}. ${task.name}`).join('\n');
-    },
-    showPayload() {
+    }
+
+    const showPayload = () => {
       // Prepare task data for API call
-      const taskData = this.tasks.map(task => ({
+      const taskData = tasks.value.map(task => ({
         name: task.name,
         dueDate: task.dueDate,
         important: task.important,
@@ -207,6 +174,25 @@ export default {
       // Format the payload as it would be sent to DeepSeek API
       const prompt = `Given this data: ${JSON.stringify(taskData, null, 2)}, recommend the order to complete them in based on urgency, importance, rating, and win votes.`;
       alert(`DeepSeek API Payload:\n\n${prompt}`);
+    }
+
+    return {
+      currentTab,
+      tasks,
+      activeTasks,
+      completedTasks,
+      followingTasksComputed,
+      showNewTaskForm,
+      addTask,
+      editTask,
+      deleteTask,
+      shareTask,
+      completeTask,
+      uncompleteTask,
+      followTask,
+      unfollowTask,
+      summarizeTasks,
+      showPayload
     }
   }
 }

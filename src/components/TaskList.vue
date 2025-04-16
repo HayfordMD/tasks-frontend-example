@@ -1,6 +1,11 @@
 <template>
   <div class="task-list">
-    <h2>Tasks</h2>
+    <div class="header-with-buttons">
+      <h2>Tasks</h2>
+      <div class="header-buttons">
+        <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
+      </div>
+    </div>
     <ul v-if="sortedTasks.length > 0">
       <li v-for="task in sortedTasks" :key="task.id" class="task-item">
         <div class="task-header">
@@ -53,13 +58,9 @@
     </ul>
     <div v-else class="no-tasks">
       <p>No tasks available.</p>
-      <div class="task-list-actions">
-        <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
-      </div>
     </div>
     <div v-if="sortedTasks.length > 0" class="task-list-actions">
       <button @click="$emit('summarizeTasks')" class="summarize-btn">Summarize Tasks</button>
-      <button @click="$emit('showPayload')" class="payload-btn">Show DeepSeek Payload</button>
     </div>
   </div>
 </template>
@@ -94,6 +95,18 @@ export default {
 <style scoped>
 .task-list {
   margin-bottom: 20px;
+}
+
+.header-with-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 h2 {
@@ -286,22 +299,6 @@ ul {
 
 .summarize-btn:hover {
   background-color: #7b1fa2;
-}
-
-.payload-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 3px;
-  background-color: #2196f3;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-  margin-left: 10px;
-  transition: background-color 0.3s;
-}
-
-.payload-btn:hover {
-  background-color: #1976d2;
 }
 
 .no-tasks {
