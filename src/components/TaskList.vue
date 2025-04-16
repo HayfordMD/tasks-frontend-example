@@ -243,13 +243,19 @@ ul {
   background: none;
   border: none;
   padding: 0;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
   color: #d4af37;
+  opacity: 0.23;
 }
 
 .star-btn.filled {
-  color: #ffd700;
+  color: #febe00;
+  opacity: 1;
+}
+
+.star-btn:hover {
+  opacity: 0.6;
 }
 
 .vote-btn {
@@ -287,9 +293,9 @@ ul {
 
 .toggle-btn {
   padding: 5px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid black;
   border-radius: 3px;
-  background-color: #f0f0f0;
+  background-color: white;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s;
